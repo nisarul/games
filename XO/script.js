@@ -489,11 +489,16 @@ function setupPeerJS() {
     createGameBtn.addEventListener('click', () => {
         // Try with default PeerJS server for better reliability
         peer = new Peer({
+            host: '0.peerjs.com',
+            port: 443,
+            secure: true,
             config: {
                 'iceServers': [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' },
+                    { urls: 'stun:stun4.l.google.com:19302' }
                 ]
             }
         });
@@ -574,11 +579,16 @@ function setupPeerJS() {
         }
         
         peer = new Peer({
+            host: '0.peerjs.com',
+            port: 443,
+            secure: true,
             config: {
                 'iceServers': [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' },
+                    { urls: 'stun:stun4.l.google.com:19302' }
                 ]
             }
         });
