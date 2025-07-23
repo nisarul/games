@@ -364,6 +364,69 @@ h1 {
     font-size: 1.5em;
 }
 
+/* Player Names Section */
+.player-names-section {
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.player-names-section h3 {
+    margin-bottom: 15px;
+    color: #ffeb3b;
+    font-size: 1.2em;
+}
+
+.name-inputs {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.name-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.name-input-group label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.name-input-group input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 15px;
+    width: 150px;
+    text-align: center;
+    font-size: 1em;
+}
+
+.name-input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.name-input-group input:focus {
+    outline: none;
+    border-color: #ffeb3b;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .mode-btn {
     background: rgba(255, 255, 255, 0.2);
     color: white;
