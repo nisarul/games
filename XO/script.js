@@ -279,7 +279,8 @@ class XOGame {
         this.scores[this.currentPlayer]++;
         this.saveScores();
         this.updateDisplay();
-        this.showMessage(`Player ${this.currentPlayer} wins! 🎉`, 'win');
+        const winnerName = playerNames[this.currentPlayer];
+        this.showMessage(`${winnerName} wins! 🎉`, 'win');
         
         // Auto reset after 3 seconds
         setTimeout(() => {
@@ -334,14 +335,15 @@ class XOGame {
             this.showMessage('');
         }, 2000);
     }
-    
-    updateDisplay() {
-        document.getElementById('current-player').textContent = this.currentPlayer;
+      updateDisplay() {
+        if (typeof updateCurrentPlayerDisplay === 'function') {
+            updateCurrentPlayerDisplay();
+        }
         document.getElementById('score-x').textContent = this.scores.X;
         document.getElementById('score-o').textContent = this.scores.O;
         document.getElementById('score-draw').textContent = this.scores.draws;
     }
-    
+
     showMessage(message, className = '') {
         const messageElement = document.getElementById('game-message');
         messageElement.textContent = message;
@@ -446,10 +448,28 @@ let isOnlineGame = false;
 let mySymbol = 'X';
 let fullPeerId = ''; // Store the full peer ID
 
+// Player names
+let playerNames = {
+    X: 'Player X',
+    O: 'Player O'
+};
+
+// Function to update current player display
+function updateCurrentPlayerDisplay() {
+    const currentPlayerText = document.getElementById('current-player-text');
+    if (window.game && window.game.gameActive) {
+        const currentPlayerName = playerNames[window.game.currentPlayer];
+        currentPlayerText.textContent = `${currentPlayerName}'s Turn`;
+    } else {
+        currentPlayerText.textContent = 'Game Over';
+    }
+}
+
 // PeerJS Setup Function
 function setupPeerJS() {
     const createGameBtn = document.getElementById('create-game');
     const joinGameBtn = document.getElementById('join-game');
+    const retryJoinBtn = document.getElementById('retry-join');
     const roomCodeInput = document.getElementById('room-code-input');
     const roomCodeDisplay = document.getElementById('room-code');
     const roomCodeDisplayDiv = document.getElementById('room-code-display');
@@ -480,17 +500,45 @@ function setupPeerJS() {
             const shortId = id.substring(0, 8).toUpperCase();
             roomCodeDisplay.textContent = fullPeerId; // Show full ID for now
             roomCodeDisplayDiv.style.display = 'block';
-            connectionStatus.textContent = `Waiting for player to join...`;
+            connectionStatus.textContent = `Host ready! Waiting for player...`;
             connectionStatus.className = 'connection-status waiting';
+            console.log('Host is ready to accept connections on ID:', id);
         });
 
         peer.on('connection', (conn) => {
             console.log('Player connected!', conn);
             connection = conn;
-            setupConnection();
-            connectionStatus.textContent = 'Player joined! Starting game...';
-            connectionStatus.className = 'connection-status connected';
-            setTimeout(() => startOnlineGame(), 1000);
+            
+            // Handle connection immediately if already open, or wait for open event
+            if (conn.open) {
+                console.log('Connection already open on host side');
+                setupConnection();
+                connectionStatus.textContent = 'Player joined! Starting game...';
+                connectionStatus.className = 'connection-status connected';
+                setTimeout(() => startOnlineGame(), 1000);
+            } else {
+                conn.on('open', () => {
+                    console.log('Connection opened on host side');
+                    setupConnection();
+                    connectionStatus.textContent = 'Player joined! Starting game...';
+                    connectionStatus.className = 'connection-status connected';
+                    setTimeout(() => startOnlineGame(), 1000);
+                });
+            }
+            
+            // Handle connection errors and close events
+            conn.on('error', (error) => {
+                console.error('Host connection error:', error);
+                connectionStatus.textContent = 'Connection failed.';
+                connectionStatus.className = 'connection-status error';
+            });
+            
+            conn.on('close', () => {
+                console.log('Connection closed on host side');
+                connectionStatus.textContent = 'Player disconnected.';
+                connectionStatus.className = 'connection-status error';
+                isOnlineGame = false;
+            });
         });
 
         peer.on('error', (error) => {
@@ -512,6 +560,11 @@ function setupPeerJS() {
         // Use the room code as the full peer ID
         const targetPeerId = roomCode;
         
+        // Clean up any existing peer
+        if (peer) {
+            peer.destroy();
+        }
+        
         peer = new Peer({
             config: {
                 'iceServers': [
@@ -523,25 +576,29 @@ function setupPeerJS() {
         });
         isHost = false;
         mySymbol = 'O';
-        connectionStatus.textContent = 'Connecting...';
+        connectionStatus.textContent = 'Initializing...';
         connectionStatus.className = 'connection-status connecting';
 
         peer.on('open', (myId) => {
             console.log('Joiner Peer ID:', myId);
             console.log('Attempting to connect to:', targetPeerId);
+            
+            connectionStatus.textContent = 'Connecting to host...';
             connection = peer.connect(targetPeerId);
             
-            // Add timeout for connection attempt
+            // Add timeout for connection attempt  
             const connectionTimeout = setTimeout(() => {
-                if (connection && connection.open !== true) {
-                    connectionStatus.textContent = 'Connection timeout. Check the room code.';
+                if (!connection || !connection.open) {
+                    connectionStatus.textContent = 'Connection timeout. Host may be offline. Try retry.';
                     connectionStatus.className = 'connection-status error';
+                    retryJoinBtn.style.display = 'inline-block';
+                    console.log('Connection timeout - host may not be available');
                 }
-            }, 10000); // 10 second timeout
+            }, 10000); // Reduced to 10 seconds for faster feedback
             
             connection.on('open', () => {
                 clearTimeout(connectionTimeout);
-                console.log('Connection established!');
+                console.log('Connection established on joiner side!');
                 setupConnection();
                 connectionStatus.textContent = 'Connected! Starting game...';
                 connectionStatus.className = 'connection-status connected';
@@ -549,9 +606,19 @@ function setupPeerJS() {
             });
 
             connection.on('error', (error) => {
-                console.error('Connection error:', error);
-                connectionStatus.textContent = 'Could not connect. Check the room code.';
+                clearTimeout(connectionTimeout);
+                console.error('Joiner connection error:', error);
+                connectionStatus.textContent = 'Could not connect. Host may be offline.';
                 connectionStatus.className = 'connection-status error';
+                retryJoinBtn.style.display = 'inline-block';
+            });
+            
+            connection.on('close', () => {
+                clearTimeout(connectionTimeout);
+                console.log('Connection closed on joiner side');
+                connectionStatus.textContent = 'Connection lost.';
+                connectionStatus.className = 'connection-status error';
+                isOnlineGame = false;
             });
         });
 
@@ -559,7 +626,14 @@ function setupPeerJS() {
             console.error('Peer error:', error);
             connectionStatus.textContent = `Connection failed: ${error.type}`;
             connectionStatus.className = 'connection-status error';
+            retryJoinBtn.style.display = 'inline-block';
         });
+    });
+
+    // Retry Join functionality
+    retryJoinBtn.addEventListener('click', () => {
+        retryJoinBtn.style.display = 'none';
+        joinGameBtn.click(); // Trigger the join game logic again
     });
 
     // Copy room code
@@ -594,26 +668,67 @@ function setupPeerJS() {
 }
 
 function setupConnection() {
+    if (!connection) {
+        console.error('No connection to setup');
+        return;
+    }
+    
+    console.log('Setting up connection handlers');
+    
     connection.on('data', (data) => {
+        console.log('Received data:', data);
         if (data.type === 'move') {
             window.game.remoteMove(data.index);
         } else if (data.type === 'reset') {
             window.game.remoteReset();
+        } else if (data.type === 'ping') {
+            // Respond to ping
+            connection.send({ type: 'pong' });
+        } else if (data.type === 'pong') {
+            console.log('Received pong');
         }
     });
 
     connection.on('close', () => {
+        console.log('Connection closed');
         isOnlineGame = false;
         document.getElementById('connection-status').textContent = 'Connection lost.';
         document.getElementById('connection-status').className = 'connection-status error';
     });
+    
+    connection.on('error', (error) => {
+        console.error('Connection error:', error);
+        isOnlineGame = false;
+        document.getElementById('connection-status').textContent = 'Connection error.';
+        document.getElementById('connection-status').className = 'connection-status error';
+    });
+    
+    // Send a ping to test the connection
+    setTimeout(() => {
+        if (connection && connection.open) {
+            connection.send({ type: 'ping' });
+            console.log('Sent ping');
+        }
+    }, 1000);
 }
 
 function startOnlineGame() {
     isOnlineGame = true;
     document.getElementById('online-setup').style.display = 'none';
     document.getElementById('game-area').style.display = 'block';
-    document.getElementById('game-mode-text').textContent = `Online Game (You are ${mySymbol})`;
+    
+    // Set player names for online game
+    if (isHost) {
+        playerNames.X = document.getElementById('player1-name').value.trim() || 'Host Player';
+        playerNames.O = 'Guest Player';
+        document.getElementById('game-mode-text').textContent = `Online Game (You are ${playerNames.X})`;
+    } else {
+        playerNames.X = 'Host Player';
+        playerNames.O = document.getElementById('player1-name').value.trim() || 'Guest Player';
+        document.getElementById('game-mode-text').textContent = `Online Game (You are ${playerNames.O})`;
+    }
+    
+    updatePlayerLabels();
     window.game.resetGame();
 }
 
@@ -624,6 +739,10 @@ function resetToMenu() {
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('room-code-display').style.display = 'none';
     document.getElementById('connection-status').textContent = '';
+    
+    // Reset player names to defaults
+    playerNames.X = 'Player X';
+    playerNames.O = 'Player O';
 }
 
 
@@ -698,25 +817,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameModeSelector = document.getElementById('game-mode-selector');
     const onlineSetup = document.getElementById('online-setup');
     const gameArea = document.getElementById('game-area');
+    const player1NameInput = document.getElementById('player1-name');
+    const player2NameInput = document.getElementById('player2-name');
+    const player2NameGroup = document.getElementById('player2-name-group');
+    const player1Label = document.getElementById('player1-label');
+    const namesSectionTitle = document.getElementById('names-section-title');
+    const localBtn = document.getElementById('local-btn');
+    const onlineBtn = document.getElementById('online-btn');
+
+    // Add hover effects to show/hide second player input
+    localBtn.addEventListener('mouseenter', () => {
+        player2NameGroup.style.display = 'flex';
+        player1Label.textContent = 'Player 1 (X):';
+        namesSectionTitle.textContent = 'Player Names';
+        player1NameInput.placeholder = 'Enter name';
+    });
+
+    onlineBtn.addEventListener('mouseenter', () => {
+        player2NameGroup.style.display = 'none';
+        player1Label.textContent = 'Your Name:';
+        namesSectionTitle.textContent = 'Your Name';
+        player1NameInput.placeholder = 'Enter your name';
+    });
+
+    // Set initial state
+    player2NameGroup.style.display = 'flex';
 
     modeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.getAttribute('data-mode');
             
+            // Get player names
+            const player1Name = player1NameInput.value.trim() || 'Player 1';
+            const player2Name = player2NameInput.value.trim() || 'Player 2';
+            
             if (mode === 'local') {
-                // Start local multiplayer
+                // Start local multiplayer with both names
                 isOnlineGame = false;
+                playerNames.X = player1Name;
+                playerNames.O = player2Name;
+                
                 gameModeSelector.style.display = 'none';
                 gameArea.style.display = 'block';
                 document.getElementById('game-mode-text').textContent = 'Local Game';
+                updatePlayerLabels();
                 window.game.resetGame();
             } else if (mode === 'online') {
-                // Show online setup
+                // Show online setup - only use player 1 name for online
+                playerNames.X = player1Name;
+                playerNames.O = 'Other Player'; // Will be updated when they connect
+                
                 gameModeSelector.style.display = 'none';
                 onlineSetup.style.display = 'block';
             }
         });
     });
+
+    // Function to update player labels in the UI
+    function updatePlayerLabels() {
+        document.getElementById('player-x-label').textContent = playerNames.X;
+        document.getElementById('player-o-label').textContent = playerNames.O;
+        updateCurrentPlayerDisplay();
+    }
     
     // Setup PeerJS multiplayer UI and logic
     if (typeof Peer !== 'undefined') {

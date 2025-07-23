@@ -13,8 +13,26 @@
         
         <div class="game-mode-selector" id="game-mode-selector">
             <h2>Choose Game Mode</h2>
-            <button class="mode-btn" data-mode="local">Local Multiplayer</button>
-            <button class="mode-btn" data-mode="online">Online Multiplayer</button>
+            
+            <!-- Player Names Section -->
+            <div class="player-names-section">
+                <h3 id="names-section-title">Player Names</h3>
+                <div class="name-inputs">
+                    <div class="name-input-group">
+                        <label for="player1-name" id="player1-label">Your Name:</label>
+                        <input type="text" id="player1-name" placeholder="Enter your name" maxlength="15">
+                    </div>
+                    <div class="name-input-group" id="player2-name-group">
+                        <label for="player2-name">Player 2 (O):</label>
+                        <input type="text" id="player2-name" placeholder="Enter name" maxlength="15">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mode-buttons">
+                <button class="mode-btn" data-mode="local" id="local-btn">Local Multiplayer</button>
+                <button class="mode-btn" data-mode="online" id="online-btn">Online Multiplayer</button>
+            </div>
         </div>
 
         <div class="online-setup" id="online-setup" style="display: none;">
@@ -32,7 +50,10 @@
                 <div class="option">
                     <h4>Join Game</h4>
                     <input type="text" id="room-code-input" placeholder="Enter full room code" maxlength="50">
-                    <button id="join-game" class="btn">Join Game</button>
+                    <div class="button-group">
+                        <button id="join-game" class="btn">Join Game</button>
+                        <button id="retry-join" class="btn btn-small" style="display: none;">Retry</button>
+                    </div>
                 </div>
             </div>
             <div class="connection-status" id="connection-status"></div>
@@ -41,7 +62,7 @@
         <div class="game-area" id="game-area" style="display: none;">
             <div class="game-info">
                 <div class="current-player">
-                    Current Player: <span id="current-player">X</span>
+                    <span id="current-player-text">Player X's Turn</span>
                 </div>
                 <div class="game-mode-info">
                     <span id="game-mode-text">Local Game</span>
@@ -49,10 +70,10 @@
                 </div>
                 <div class="score-board">
                     <div class="score">
-                        Player X: <span id="score-x">0</span>
+                        <span id="player-x-label">Player X</span>: <span id="score-x">0</span>
                     </div>
                     <div class="score">
-                        Player O: <span id="score-o">0</span>
+                        <span id="player-o-label">Player O</span>: <span id="score-o">0</span>
                     </div>
                     <div class="score">
                         Draws: <span id="score-draw">0</span>
