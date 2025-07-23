@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer X-O Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Multiplayer X-O Game</h1>
+        
+        <div class="game-mode-selector" id="game-mode-selector">
+            <h2>Choose Game Mode</h2>
+            <button class="mode-btn" data-mode="local">Local Multiplayer</button>
+            <button class="mode-btn" data-mode="online">Online Multiplayer</button>
+        </div>
+
+        <div class="online-setup" id="online-setup" style="display: none;">
+            <h3>Online Multiplayer Setup</h3>
+            <div class="connection-options">
+                <div class="option">
+                    <h4>Create Game</h4>
+                    <button id="create-game" class="btn">Create New Game</button>
+                    <div id="room-code-display" style="display: none;">
+                        <p>Share this code with your friend:</p>
+                        <div class="room-code" id="room-code"></div>
+                        <button id="copy-code" class="btn-small">Copy Code</button>
+                    </div>
+                </div>
+                <div class="option">
+                    <h4>Join Game</h4>
+                    <input type="text" id="room-code-input" placeholder="Enter full room code" maxlength="50">
+                    <button id="join-game" class="btn">Join Game</button>
+                </div>
+            </div>
+            <div class="connection-status" id="connection-status"></div>
+        </div>
+        
+        <div class="game-area" id="game-area" style="display: none;">
+            <div class="game-info">
+                <div class="current-player">
+                    Current Player: <span id="current-player">X</span>
+                </div>
+                <div class="game-mode-info">
+                    <span id="game-mode-text">Local Game</span>
+                    <button id="back-to-menu" class="btn-small">← Menu</button>
+                </div>
+                <div class="score-board">
+                    <div class="score">
+                        Player X: <span id="score-x">0</span>
+                    </div>
+                    <div class="score">
+                        Player O: <span id="score-o">0</span>
+                    </div>
+                    <div class="score">
+                        Draws: <span id="score-draw">0</span>
+                    </div>
+                </div>
+            </div>
+
+        <div class="game-board" id="game-board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+            <div class="game-controls">
+                <button id="reset-game" class="btn">Reset Game</button>
+                <button id="reset-scores" class="btn">Reset Scores</button>
+            </div>
+
+            <div id="game-message" class="game-message"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
