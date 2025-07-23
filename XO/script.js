@@ -555,9 +555,10 @@ function setupPeerJS() {
         });
 
         peer.on('error', (error) => {
-            console.error('Peer error:', error);
-            connectionStatus.textContent = `Error: ${error.type}. Try again.`;
+            console.error('Host Peer error:', error);
+            connectionStatus.textContent = `Host Error: ${error.type || 'Unknown'}. Try refreshing.`;
             connectionStatus.className = 'connection-status error';
+            document.getElementById('troubleshooting').style.display = 'block';
         });
     });
 
@@ -610,6 +611,7 @@ function setupPeerJS() {
                     connectionStatus.textContent = 'Connection timeout. Host may be offline. Try retry.';
                     connectionStatus.className = 'connection-status error';
                     retryJoinBtn.style.display = 'inline-block';
+                    document.getElementById('troubleshooting').style.display = 'block';
                     console.log('Connection timeout - host may not be available');
                 }
             }, 10000); // Reduced to 10 seconds for faster feedback
@@ -641,10 +643,11 @@ function setupPeerJS() {
         });
 
         peer.on('error', (error) => {
-            console.error('Peer error:', error);
-            connectionStatus.textContent = `Connection failed: ${error.type}`;
+            console.error('Joiner Peer error:', error);
+            connectionStatus.textContent = `Connection failed: ${error.type || 'Network issue'}`;
             connectionStatus.className = 'connection-status error';
             retryJoinBtn.style.display = 'inline-block';
+            document.getElementById('troubleshooting').style.display = 'block';
         });
     });
 

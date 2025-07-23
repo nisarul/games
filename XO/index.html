@@ -54,9 +54,26 @@
                         <button id="join-game" class="btn">Join Game</button>
                         <button id="retry-join" class="btn btn-small" style="display: none;">Retry</button>
                     </div>
+                    <div class="debug-info">
+                        <small style="color: rgba(255,255,255,0.7);">
+                            💡 Tip: If connection fails, try using a different browser or network
+                        </small>
+                    </div>
                 </div>
             </div>
             <div class="connection-status" id="connection-status"></div>
+            
+            <!-- Troubleshooting Tips -->
+            <div class="troubleshooting" id="troubleshooting" style="display: none;">
+                <h4>🔧 Connection Issues?</h4>
+                <ul style="text-align: left; font-size: 0.9em; color: rgba(255,255,255,0.8);">
+                    <li>Make sure both players are using modern browsers (Chrome, Firefox, Edge)</li>
+                    <li>Try disabling VPN/proxy if enabled</li>
+                    <li>Both players should be on different networks for testing</li>
+                    <li>Corporate firewalls may block WebRTC connections</li>
+                    <li>Try refreshing the page and creating a new room</li>
+                </ul>
+            </div>
         </div>
         
         <div class="game-area" id="game-area" style="display: none;">
